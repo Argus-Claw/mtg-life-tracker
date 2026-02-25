@@ -2,7 +2,7 @@
   "name": "MTG Life Tracker",
   "short_name": "MTG Tracker",
   "description": "Premium Magic: The Gathering Commander life tracker",
-  "start_url": "/",
+  "start_url": "/mtg-life-tracker/",
   "display": "standalone",
   "background_color": "#0D0D0F",
   "theme_color": "#0D0D0F",

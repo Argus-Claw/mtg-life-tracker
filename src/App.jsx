@@ -386,7 +386,31 @@ export default function MTGTracker() {
 
   useWakeLock();
   const isLandscape = useOrientation();
-  const use2x2Grid = isLandscape && players.length === 4;
+  const use2x2Grid = players.length === 4;
+  const useTopBottomSplit = players.length >= 2;
+
+  // Determine which players are rotated (top half of the layout, facing the opposite player)
+  const getRotated = (index) => {
+    const count = players.length;
+    if (count === 2) return index === 0; // P2 is rendered first (top), rotated
+    if (count === 3) return index < 2;   // Top 2 rotated
+    if (count === 4) return index < 2;   // Top row rotated
+    // 5+: top half rotated
+    return index < Math.ceil(count / 2);
+  };
+
+  // Reorder players so "far side" players render at the top
+  const getDisplayOrder = () => {
+    const count = players.length;
+    if (count === 2) return [players[1], players[0]]; // P2 on top, P1 on bottom
+    if (count === 3) return [players[1], players[2], players[0]]; // P2,P3 top row; P1 bottom
+    if (count === 4) return [players[2], players[3], players[0], players[1]]; // P3,P4 top; P1,P2 bottom
+    // 5+: top half reversed, bottom half normal
+    const half = Math.ceil(count / 2);
+    return [...players.slice(half), ...players.slice(0, half)];
+  };
+
+  const displayPlayers = getDisplayOrder();
 
   // Persist state to localStorage on every change
   useEffect(() => {
@@ -467,15 +491,15 @@ export default function MTGTracker() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: use2x2Grid ? "100%" : 600, margin: "0 auto", position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: players.length >= 3 ? "100%" : 600, margin: "0 auto", position: "relative" }}>
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 300, background: `radial-gradient(ellipse at 50% 0%, ${theme.glow}, transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "relative", zIndex: 1, padding: use2x2Grid ? "8px 8px 60px" : "16px 16px 100px" }}>
-        <div style={{ textAlign: "center", paddingTop: use2x2Grid ? 4 : 12, paddingBottom: use2x2Grid ? 8 : 16 }}>
-          <h1 style={{ fontSize: use2x2Grid ? 16 : 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
+      <div style={{ position: "relative", zIndex: 1, padding: players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px" }}>
+        <div style={{ textAlign: "center", paddingTop: players.length >= 3 ? 4 : 12, paddingBottom: players.length >= 3 ? 8 : 16 }}>
+          <h1 style={{ fontSize: players.length >= 3 ? 16 : 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
           <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.15em", marginTop: 4 }}>{format.name.toUpperCase()} {"\u00B7"} TURN {turnCount} {"\u00B7"} STORM {stormCount}</div>
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: use2x2Grid ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: players.length >= 3 ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>
           <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
           <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
           <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
@@ -576,18 +600,87 @@ export default function MTGTracker() {
         )}
 
         <div style={{
-          display: use2x2Grid ? "grid" : "flex",
-          flexDirection: use2x2Grid ? undefined : "column",
-          gridTemplateColumns: use2x2Grid ? "1fr 1fr" : undefined,
+          display: "flex",
+          flexDirection: "column",
           gap: 12,
+          minHeight: "calc(100vh - 200px)",
         }}>
-          {players.map((player, index) => (
-            <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
-              onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
-              isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
-              rotated={use2x2Grid && index < 2}
-            />
-          ))}
+          {players.length === 2 ? (
+            // 2 players: vertical split, each takes ~half
+            displayPlayers.map((player, index) => (
+              <div key={player.id} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <PlayerCard player={player} players={players} theme={theme} format={format}
+                  onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                  isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                  rotated={getRotated(index)}
+                />
+              </div>
+            ))
+          ) : players.length === 3 ? (
+            // 3 players: top row (2 rotated), bottom row (1 normal full width)
+            <>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {displayPlayers.slice(0, 2).map((player, index) => (
+                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                    rotated={getRotated(index)}
+                  />
+                ))}
+              </div>
+              <div style={{ flex: 1 }}>
+                <PlayerCard player={displayPlayers[2]} players={players} theme={theme} format={format}
+                  onUpdate={(updates) => updatePlayer(displayPlayers[2].id, updates)} onRemove={() => removePlayer(displayPlayers[2].id)}
+                  isMinimized={!!minimized[displayPlayers[2].id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [displayPlayers[2].id]: !prev[displayPlayers[2].id] }))}
+                  rotated={getRotated(2)}
+                />
+              </div>
+            </>
+          ) : players.length === 4 ? (
+            // 4 players: 2x2 grid, top row rotated
+            <>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {displayPlayers.slice(0, 2).map((player, index) => (
+                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                    rotated={getRotated(index)}
+                  />
+                ))}
+              </div>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {displayPlayers.slice(2, 4).map((player, index) => (
+                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                    rotated={getRotated(index + 2)}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            // 5+ players: top half rotated (grid rows), bottom half normal
+            <>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {displayPlayers.slice(0, Math.ceil(players.length / 2)).map((player, index) => (
+                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                    rotated={getRotated(index)}
+                  />
+                ))}
+              </div>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {displayPlayers.slice(Math.ceil(players.length / 2)).map((player, index) => (
+                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                    rotated={getRotated(index + Math.ceil(players.length / 2))}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "center" }}>

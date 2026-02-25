@@ -434,6 +434,19 @@ export default function MTGTracker() {
       const updated = { ...p, ...updates };
       if (updates.life !== undefined && updates.life !== p.life) { logAction(`${p.name}: ${p.life} \u2192 ${updates.life} life`); }
       if (updates.poison !== undefined && updates.poison !== p.poison) { logAction(`${p.name}: ${updates.poison} poison counters`); }
+      if (updates.energy !== undefined && updates.energy !== p.energy) { logAction(`${p.name}: ${p.energy} \u2192 ${updates.energy} energy`); }
+      if (updates.experience !== undefined && updates.experience !== p.experience) { logAction(`${p.name}: ${p.experience} \u2192 ${updates.experience} experience`); }
+      if (updates.commanderDamage !== undefined) {
+        Object.keys(updates.commanderDamage).forEach((oppId) => {
+          const oldDmg = p.commanderDamage[oppId] || 0;
+          const newDmg = updates.commanderDamage[oppId] || 0;
+          if (newDmg !== oldDmg) {
+            const opp = prev.find((pl) => pl.id === Number(oppId));
+            const oppName = opp ? opp.name : `Player ${oppId}`;
+            logAction(`${p.name}: took ${newDmg - oldDmg > 0 ? newDmg - oldDmg : oldDmg - newDmg} commander damage from ${oppName}`);
+          }
+        });
+      }
       return updated;
     }));
   }, [logAction]);
@@ -551,9 +564,9 @@ export default function MTGTracker() {
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Storm Count</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                  <button onClick={() => { haptic(); setStormCount(Math.max(0, stormCount - 1)); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
+                  <button onClick={() => { haptic(); const next = Math.max(0, stormCount - 1); setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
                   <span style={{ fontSize: 28, fontWeight: 700, color: theme.accent, minWidth: 30 }}>{stormCount}</span>
-                  <button onClick={() => { haptic(); setStormCount(stormCount + 1); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                  <button onClick={() => { haptic(); const next = stormCount + 1; setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>

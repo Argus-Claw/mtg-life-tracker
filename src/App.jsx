@@ -229,7 +229,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
               onKeyDown={(e) => { if (e.key === "Enter") { onUpdate({ name: e.target.value.trim() || `Player ${player.id}` }); setEditingName(false); } }}
               style={{ background: "transparent", border: `1px solid ${theme.border}`, color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, padding: "2px 8px", borderRadius: 6, outline: "none", width: 120 }} />
           ) : (
-            <span onClick={() => setEditingName(true)} style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, cursor: "pointer", letterSpacing: "0.05em", borderBottom: `1px dashed ${theme.muted}44`, paddingBottom: 1 }}>{player.name}</span>
+            <span onClick={() => setEditingName(true)} style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em", borderBottom: `1px dashed ${theme.muted}44`, paddingBottom: 1 }}>{player.name}</span>
           )}
           <div style={{ display: "flex", gap: 3 }}>
             {Object.entries(MANA_COLORS).map(([key, mc]) => (
@@ -240,7 +240,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={handleButton(onToggleMinimize)} style={{ background: "none", border: "none", color: theme.muted, cursor: "pointer", fontSize: 16, padding: 2 }}>−</button>
           {players.length > 2 && (
-            <button onClick={handleButton(onRemove)} style={{ background: "none", border: "none", color: "#7F1D1D", cursor: "pointer", fontSize: 14, padding: 2 }}>✕</button>
+            <button onClick={handleButton(onRemove)} style={{ background: "rgba(127,29,29,0.15)", border: "1px solid rgba(127,29,29,0.3)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: 11, fontWeight: 700, padding: "2px 6px", lineHeight: 1 }}>✕</button>
           )}
         </div>
       </div>
@@ -554,10 +554,10 @@ export default function MTGTracker() {
         </div>
 
         <div style={{ display: "flex", gap: 6, marginBottom: players.length >= 3 ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>
-          <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
-          <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
-          <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
-          <button onClick={toggleFullscreen} style={{ padding: "6px 14px", borderRadius: 8, background: isFullscreen ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: isFullscreen ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><FullscreenIcon size={12} /> {isFullscreen ? "Exit" : "Full"}</button>
+          <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
+          <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
+          <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
+          <button onClick={toggleFullscreen} style={{ padding: "6px 14px", borderRadius: 8, background: isFullscreen ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: isFullscreen ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><FullscreenIcon size={12} /> {isFullscreen ? "Exit" : "Full"}</button>
         </div>
 
         {showSettings && (
@@ -565,13 +565,13 @@ export default function MTGTracker() {
             <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>Format</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
               {FORMATS.map((f) => (
-                <button key={f.id} onClick={() => changeFormat(f)} style={{ padding: "6px 12px", borderRadius: 8, background: format.id === f.id ? theme.accent : "transparent", border: `1px solid ${format.id === f.id ? theme.accent : theme.border}`, color: format.id === f.id ? theme.bg : theme.muted, fontSize: 11, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{f.name} ({f.life})</button>
+                <button key={f.id} onClick={() => changeFormat(f)} style={{ padding: "6px 12px", borderRadius: 8, background: format.id === f.id ? theme.accent : "transparent", border: `1px solid ${format.id === f.id ? theme.accent : theme.border}`, color: format.id === f.id ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{f.name} ({f.life})</button>
               ))}
             </div>
             <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>Theme</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {THEMES.map((t) => (
-                <button key={t.id} onClick={() => { haptic(); setTheme(t); }} style={{ padding: "6px 12px", borderRadius: 8, background: theme.id === t.id ? t.accent : "transparent", border: `1px solid ${theme.id === t.id ? t.accent : t.border}`, color: theme.id === t.id ? t.bg : t.accent, fontSize: 11, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{t.name}</button>
+                <button key={t.id} onClick={() => { haptic(); setTheme(t); }} style={{ padding: "6px 12px", borderRadius: 8, background: theme.id === t.id ? t.accent : "transparent", border: `1px solid ${theme.id === t.id ? t.accent : t.border}`, color: theme.id === t.id ? t.bg : t.accent, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{t.name}</button>
               ))}
             </div>
           </div>

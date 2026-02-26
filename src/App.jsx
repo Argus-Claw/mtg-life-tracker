@@ -225,8 +225,8 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {editingName ? (
             <input autoFocus defaultValue={player.name}
-              onBlur={(e) => { onUpdate({ name: e.target.value }); setEditingName(false); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { onUpdate({ name: e.target.value }); setEditingName(false); } }}
+              onBlur={(e) => { onUpdate({ name: e.target.value.trim() || `Player ${player.id}` }); setEditingName(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { onUpdate({ name: e.target.value.trim() || `Player ${player.id}` }); setEditingName(false); } }}
               style={{ background: "transparent", border: `1px solid ${theme.border}`, color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, padding: "2px 8px", borderRadius: 6, outline: "none", width: 120 }} />
           ) : (
             <span onClick={() => setEditingName(true)} style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, cursor: "pointer", letterSpacing: "0.05em", borderBottom: `1px dashed ${theme.muted}44`, paddingBottom: 1 }}>{player.name}</span>

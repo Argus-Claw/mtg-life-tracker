@@ -467,7 +467,7 @@ export default function MTGTracker() {
       if (index < topCount) {
         // Top row: left card faces left, right card faces right
         const posInRow = index % 2;
-        return posInRow === 0 ? "left" : "right";
+        return posInRow === 0 ? "right" : "left";
       }
       return "normal";
     }

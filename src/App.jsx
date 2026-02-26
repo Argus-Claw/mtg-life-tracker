@@ -221,8 +221,8 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       transform: rotated ? "rotate(180deg)" : "none",
     }}>
       <div style={{ height: 3, background: `linear-gradient(90deg, ${manaColor.color}, ${manaColor.accent}, transparent)` }} />
-      <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ padding: players.length >= 3 ? "8px 8px 0" : "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: players.length >= 3 ? 4 : 8, overflow: "hidden", flex: 1, minWidth: 0 }}>
           {editingName ? (
             <input autoFocus defaultValue={player.name}
               onBlur={(e) => { onUpdate({ name: e.target.value.trim() || `Player ${player.id}` }); setEditingName(false); }}
@@ -237,10 +237,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: theme.muted, cursor: "pointer", fontSize: 16, fontWeight: 700, padding: "4px 10px", lineHeight: 1 }}>−</button>
+        <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.muted, cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>−</button>
           {players.length > 2 && (
-            <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 8, color: "#F87171", cursor: "pointer", fontSize: 16, fontWeight: 700, padding: "4px 10px", lineHeight: 1 }}>✕</button>
+            <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>✕</button>
           )}
         </div>
       </div>

@@ -377,10 +377,12 @@ function useOrientation() {
 
 function toggleFullscreen() {
   haptic();
-  if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {});
+  const doc = document;
+  const el = document.documentElement;
+  if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+    (doc.exitFullscreen || doc.webkitExitFullscreen || (() => {})).call(doc).catch(() => {});
   } else {
-    document.documentElement.requestFullscreen().catch(() => {});
+    (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el).catch(() => {});
   }
 }
 
@@ -440,9 +442,10 @@ export default function MTGTracker() {
 
   // Track fullscreen changes
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    const handler = () => setIsFullscreen(!!document.fullscreenElement || !!document.webkitFullscreenElement);
     document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    document.addEventListener('webkitfullscreenchange', handler);
+    return () => { document.removeEventListener('fullscreenchange', handler); document.removeEventListener('webkitfullscreenchange', handler); };
   }, []);
 
   const logAction = useCallback((action) => {
@@ -525,7 +528,7 @@ export default function MTGTracker() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: players.length >= 3 ? "100%" : 600, margin: "0 auto", position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: players.length >= 3 ? "100%" : 600, margin: "0 auto", position: "relative", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 300, background: `radial-gradient(ellipse at 50% 0%, ${theme.glow}, transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "relative", zIndex: 1, padding: players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px" }}>
         <div style={{ textAlign: "center", paddingTop: players.length >= 3 ? 4 : 12, paddingBottom: players.length >= 3 ? 8 : 16 }}>

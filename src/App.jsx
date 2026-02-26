@@ -181,7 +181,11 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
     const rect = lifeTapRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const isRightSide = e.clientX >= centerX;
-    const isIncrease = rotated ? !isRightSide : isRightSide;
+    const centerY = rect.top + rect.height / 2;
+    // For 90/270 rotation, use Y axis instead of X
+    const isIncrease = (rotated === 90 || rotated === 270)
+      ? (rotated === 90 ? e.clientY < centerY : e.clientY >= centerY)
+      : (rotated === 180 ? !isRightSide : isRightSide);
     
     if (isIncrease) {
       onUpdate({ life: player.life + 1 });
@@ -200,7 +204,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         borderRadius: 12, padding: "12px 16px", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         opacity: isDead ? 0.5 : 1, transition: "all 0.3s ease",
-        transform: rotated ? "rotate(180deg)" : "none",
+        transform: rotated ? `rotate(${rotated}deg)` : "none",
       }}>
         <span style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14 }}>{player.name}</span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -218,7 +222,8 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       borderRadius: 16, padding: 0, position: "relative", overflow: "hidden",
       opacity: isDead ? 0.6 : 1, transition: "all 0.4s ease",
       boxShadow: isDead ? "inset 0 0 40px rgba(127,29,29,0.3)" : `0 4px 24px ${theme.glow}`,
-      transform: rotated ? "rotate(180deg)" : "none",
+      transform: rotated ? `rotate(${rotated}deg)` : "none",
+      flex: 1, display: "flex", flexDirection: "column",
     }}>
       <div style={{ height: 3, background: `linear-gradient(90deg, ${manaColor.color}, ${manaColor.accent}, transparent)` }} />
       <div style={{ padding: players.length >= 3 ? "8px 8px 0" : "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
@@ -247,7 +252,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
 
       <div ref={lifeTapRef} onClick={handleLifeTap} style={{
         padding: "16px 16px 14px", textAlign: "center", cursor: "pointer", position: "relative",
-        userSelect: "none", WebkitTapHighlightColor: "transparent",
+        userSelect: "none", WebkitTapHighlightColor: "transparent", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
         background: lifeFlash === "gain" ? "rgba(74,222,128,0.15)" : lifeFlash === "loss" ? "rgba(248,113,113,0.15)" : "transparent",
         transition: "background 0.8s ease-out",
       }}>
@@ -418,11 +423,13 @@ export default function MTGTracker() {
   // Determine which players are rotated (top half of the layout, facing the opposite player)
   const getRotated = (index) => {
     const count = players.length;
-    if (count === 2) return index === 0; // P2 is rendered first (top), rotated
-    if (count === 3) return index < 2;   // Top 2 rotated
-    if (count === 4) return index < 2;   // Top row rotated
-    // 5+: top half rotated
-    return index < Math.ceil(count / 2);
+    if (count === 2) return index === 0 ? 180 : 0;
+    if (count >= 3) {
+      const topCount = count <= 4 ? 2 : Math.ceil(count / 2);
+      if (index < topCount) return 180;
+      return 0;
+    }
+    return 0;
   };
 
   // Reorder players so "far side" players render at the top
@@ -673,13 +680,15 @@ export default function MTGTracker() {
           ) : players.length === 3 ? (
             // 3 players: top row (2 rotated), bottom row (1 normal full width)
             <>
-              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
                 {displayPlayers.slice(0, 2).map((player, index) => (
-                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
-                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
-                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
-                    rotated={getRotated(index)}
-                  />
+                  <div key={player.id} style={{ display: "flex", flexDirection: "column" }}>
+                    <PlayerCard player={player} players={players} theme={theme} format={format}
+                      onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                      isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                      rotated={getRotated(index)}
+                    />
+                  </div>
                 ))}
               </div>
               <div style={{ flex: 1 }}>

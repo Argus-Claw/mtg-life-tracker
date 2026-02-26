@@ -157,6 +157,39 @@ function AnimatedNumber({ value, theme }) {
   );
 }
 
+function SidewaysCard({ direction, children }) {
+  const containerRef = useRef(null);
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const obs = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width && height) setDims({ w: width, h: height });
+    });
+    obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const deg = direction === "left" ? 270 : 90;
+
+  return (
+    <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 150 }}>
+      {dims.w > 0 && (
+        <div style={{
+          position: "absolute",
+          top: "50%", left: "50%",
+          width: dims.h, height: dims.w,
+          transform: `translate(-50%, -50%) rotate(${deg}deg)`,
+          display: "flex", flexDirection: "column",
+        }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMinimized, onToggleMinimize, rotated }) {
   const [editingName, setEditingName] = useState(false);
   const [showCommander, setShowCommander] = useState(false);
@@ -208,10 +241,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         borderRadius: 12, padding: "12px 16px", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         opacity: isDead ? 0.5 : 1, transition: "all 0.3s ease",
-        transform: rotated === "flipped" || rotated === "right" ? "rotate(180deg)" : "none",
-        ...(isSideways ? {
-          writingMode: rotated === "left" ? "vertical-rl" : "vertical-lr",
-        } : {}),
+        transform: rotated === "flipped" ? "rotate(180deg)" : "none",
       }}>
         <span style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14 }}>{player.name}</span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -230,11 +260,9 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       opacity: isDead ? 0.6 : 1, transition: "all 0.4s ease",
       boxShadow: isDead ? "inset 0 0 40px rgba(127,29,29,0.3)" : `0 4px 24px ${theme.glow}`,
       transform: rotated === "flipped" ? "rotate(180deg)" : "none",
-      flex: 1, display: "flex", flexDirection: isSideways ? "row" : "column",
-      ...(isSideways ? { writingMode: rotated === "left" ? "vertical-rl" : "vertical-lr" } : {}),
+      flex: 1, display: "flex", flexDirection: "column",
     }}>
-      <div style={{ display: "flex", flexDirection: isSideways ? "row" : "column", flex: 1, transform: rotated === "right" ? "rotate(180deg)" : "none", overflow: "hidden", position: "relative" }}>
-      <div style={{ height: isSideways ? undefined : 3, width: isSideways ? 3 : undefined, minHeight: isSideways ? undefined : 3, minWidth: isSideways ? 3 : undefined, background: `linear-gradient(${isSideways ? "180deg" : "90deg"}, ${manaColor.color}, ${manaColor.accent}, transparent)` }} />
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${manaColor.color}, ${manaColor.accent}, transparent)` }} />
       <div style={{ padding: players.length >= 3 ? "8px 8px 0" : "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
         <div style={{ display: "flex", alignItems: "center", gap: players.length >= 3 ? 4 : 8, overflow: "hidden", flex: 1, minWidth: 0 }}>
           {editingName ? (
@@ -265,8 +293,8 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         background: lifeFlash === "gain" ? "rgba(74,222,128,0.15)" : lifeFlash === "loss" ? "rgba(248,113,113,0.15)" : "transparent",
         transition: "background 0.8s ease-out",
       }}>
-        <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, ...(isSideways ? { bottom: 16, left: "50%", transform: "translateX(-50%)" } : { left: 16, top: "50%", transform: "translateY(-50%)" }) }}>{"\u2212"}</span>
-        <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, ...(isSideways ? { top: 16, left: "50%", transform: "translateX(-50%)" } : { right: 16, top: "50%", transform: "translateY(-50%)" }) }}>+</span>
+        <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, left: 16, top: "50%", transform: "translateY(-50%)" }}>{"\u2212"}</span>
+        <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, right: 16, top: "50%", transform: "translateY(-50%)" }}>+</span>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
@@ -350,7 +378,6 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       {isDead && (
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, opacity: 0.3, pointerEvents: "none" }}>{"\u{1F480}"}</div>
       )}
-      </div>
     </div>
   );
 }
@@ -696,15 +723,29 @@ export default function MTGTracker() {
             // 3 players: top row (2 outboard), bottom row (1 normal full width)
             <>
               <div style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
-                {displayPlayers.slice(0, 2).map((player, index) => (
-                  <div key={player.id} style={{ display: "flex", flexDirection: "column" }}>
-                    <PlayerCard player={player} players={players} theme={theme} format={format}
-                      onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
-                      isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
-                      rotated={getRotated(index)}
-                    />
-                  </div>
-                ))}
+                {displayPlayers.slice(0, 2).map((player, index) => {
+                  const orient = getRotated(index);
+                  if (orient === "left" || orient === "right") {
+                    return (
+                      <SidewaysCard key={player.id} direction={orient}>
+                        <PlayerCard player={player} players={players} theme={theme} format={format}
+                          onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                          isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                          rotated={orient}
+                        />
+                      </SidewaysCard>
+                    );
+                  }
+                  return (
+                    <div key={player.id} style={{ display: "flex", flexDirection: "column" }}>
+                      <PlayerCard player={player} players={players} theme={theme} format={format}
+                        onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                        isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                        rotated={orient}
+                      />
+                    </div>
+                  );
+                })}
               </div>
               <div style={{ flex: 1 }}>
                 <PlayerCard player={displayPlayers[2]} players={players} theme={theme} format={format}
@@ -717,14 +758,28 @@ export default function MTGTracker() {
           ) : players.length === 4 ? (
             // 4 players: 2x2 grid, top row outboard
             <>
-              <div style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {displayPlayers.slice(0, 2).map((player, index) => (
-                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
-                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
-                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
-                    rotated={getRotated(index)}
-                  />
-                ))}
+              <div style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
+                {displayPlayers.slice(0, 2).map((player, index) => {
+                  const orient = getRotated(index);
+                  if (orient === "left" || orient === "right") {
+                    return (
+                      <SidewaysCard key={player.id} direction={orient}>
+                        <PlayerCard player={player} players={players} theme={theme} format={format}
+                          onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                          isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                          rotated={orient}
+                        />
+                      </SidewaysCard>
+                    );
+                  }
+                  return (
+                    <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                      onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                      isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                      rotated={orient}
+                    />
+                  );
+                })}
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {displayPlayers.slice(2, 4).map((player, index) => (
@@ -739,14 +794,28 @@ export default function MTGTracker() {
           ) : (
             // 5+ players: top half outboard (grid rows), bottom half normal
             <>
-              <div style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {displayPlayers.slice(0, Math.ceil(players.length / 2)).map((player, index) => (
-                  <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
-                    onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
-                    isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
-                    rotated={getRotated(index)}
-                  />
-                ))}
+              <div style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
+                {displayPlayers.slice(0, Math.ceil(players.length / 2)).map((player, index) => {
+                  const orient = getRotated(index);
+                  if (orient === "left" || orient === "right") {
+                    return (
+                      <SidewaysCard key={player.id} direction={orient}>
+                        <PlayerCard player={player} players={players} theme={theme} format={format}
+                          onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                          isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                          rotated={orient}
+                        />
+                      </SidewaysCard>
+                    );
+                  }
+                  return (
+                    <PlayerCard key={player.id} player={player} players={players} theme={theme} format={format}
+                      onUpdate={(updates) => updatePlayer(player.id, updates)} onRemove={() => removePlayer(player.id)}
+                      isMinimized={!!minimized[player.id]} onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
+                      rotated={orient}
+                    />
+                  );
+                })}
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {displayPlayers.slice(Math.ceil(players.length / 2)).map((player, index) => (

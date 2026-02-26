@@ -197,6 +197,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
   const [lifeFlash, setLifeFlash] = useState(null);
   const prevLife = useRef(player.life);
   const lifeTapRef = useRef(null);
+  const [pendingDelta, setPendingDelta] = useState(0);
+  const [deltaFading, setDeltaFading] = useState(false);
+  const deltaTimeoutRef = useRef(null);
+  const deltaFadeRef = useRef(null);
   const manaColor = MANA_COLORS[player.color];
   const isDead = player.life <= 0 || player.poison >= 10;
   const isSideways = rotated === "left" || rotated === "right";
@@ -209,6 +213,13 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       return () => clearTimeout(timeout);
     }
   }, [player.life]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(deltaTimeoutRef.current);
+      clearTimeout(deltaFadeRef.current);
+    };
+  }, []);
 
   const handleLifeTap = (e) => {
     haptic();
@@ -228,7 +239,19 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
     } else {
       isIncrease = e.clientX >= centerX;
     }
-    onUpdate({ life: player.life + (isIncrease ? 1 : -1) });
+    const change = isIncrease ? 1 : -1;
+    onUpdate({ life: player.life + change });
+    clearTimeout(deltaTimeoutRef.current);
+    clearTimeout(deltaFadeRef.current);
+    setDeltaFading(false);
+    setPendingDelta(prev => prev + change);
+    deltaTimeoutRef.current = setTimeout(() => {
+      setDeltaFading(true);
+      deltaFadeRef.current = setTimeout(() => {
+        setPendingDelta(0);
+        setDeltaFading(false);
+      }, 500);
+    }, 2000);
   };
 
   const handleButton = (fn) => (e) => { haptic(); fn(e); };
@@ -280,7 +303,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
           </div>
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.muted, cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>−</button>
+          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.text, cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>−</button>
           {players.length > 2 && (
             <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>✕</button>
           )}
@@ -295,6 +318,18 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       }}>
         <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, left: 16, top: "50%", transform: "translateY(-50%)" }}>{"\u2212"}</span>
         <span style={{ position: "absolute", pointerEvents: "none", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, right: 16, top: "50%", transform: "translateY(-50%)" }}>+</span>
+        {pendingDelta !== 0 && (
+          <div style={{
+            fontSize: 22, fontWeight: 700, fontFamily: "'Cinzel', serif",
+            color: pendingDelta > 0 ? "#4ADE80" : "#F87171",
+            textShadow: `0 0 12px ${pendingDelta > 0 ? "rgba(74,222,128,0.5)" : "rgba(248,113,113,0.5)"}`,
+            opacity: deltaFading ? 0 : 1,
+            transition: "opacity 0.5s ease-out",
+            lineHeight: 1, marginBottom: 2,
+          }}>
+            {pendingDelta > 0 ? `+${pendingDelta}` : pendingDelta}
+          </div>
+        )}
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
@@ -346,9 +381,9 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             <div key={counter.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6, color: counter.color, fontSize: 12 }}>{counter.icon} {counter.label}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button onClick={handleButton(() => onUpdate({ [counter.key]: Math.max(0, player[counter.key] - 1) }))} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                <button onClick={handleButton(() => onUpdate({ [counter.key]: Math.max(0, player[counter.key] - 1) }))} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                 <span style={{ color: counter.color, fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 700, minWidth: 24, textAlign: "center" }}>{player[counter.key]}</span>
-                <button onClick={handleButton(() => onUpdate({ [counter.key]: player[counter.key] + 1 }))} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                <button onClick={handleButton(() => onUpdate({ [counter.key]: player[counter.key] + 1 }))} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
               </div>
             </div>
           ))}
@@ -365,9 +400,9 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
               <div key={opp.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0", opacity: lethal ? 0.5 : 1 }}>
                 <span style={{ color: lethal ? "#EF4444" : theme.text, fontSize: 13 }}>{opp.name} {lethal && "\u{1F480}"}</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button onClick={handleButton(() => { const newDmg = { ...player.commanderDamage, [opp.id]: Math.max(0, dmg - 1) }; onUpdate({ commanderDamage: newDmg }); })} style={{ width: 24, height: 24, borderRadius: 4, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                  <button onClick={handleButton(() => { const newDmg = { ...player.commanderDamage, [opp.id]: Math.max(0, dmg - 1) }; onUpdate({ commanderDamage: newDmg }); })} style={{ width: 24, height: 24, borderRadius: 4, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                   <span style={{ color: lethal ? "#EF4444" : theme.accent, fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: "center" }}>{dmg}</span>
-                  <button onClick={handleButton(() => { const newDmg = { ...player.commanderDamage, [opp.id]: dmg + 1 }; onUpdate({ commanderDamage: newDmg, life: player.life - 1 }); })} style={{ width: 24, height: 24, borderRadius: 4, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                  <button onClick={handleButton(() => { const newDmg = { ...player.commanderDamage, [opp.id]: dmg + 1 }; onUpdate({ commanderDamage: newDmg, life: player.life - 1 }); })} style={{ width: 24, height: 24, borderRadius: 4, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                 </div>
               </div>
             );
@@ -603,10 +638,10 @@ export default function MTGTracker() {
         </div>
 
         <div style={{ display: "flex", gap: 6, marginBottom: players.length >= 3 ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>
-          <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
-          <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
-          <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
-          <button onClick={toggleFullscreen} style={{ padding: "6px 14px", borderRadius: 8, background: isFullscreen ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: isFullscreen ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><FullscreenIcon size={12} /> {isFullscreen ? "Exit" : "Full"}</button>
+          <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
+          <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
+          <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
+          <button onClick={toggleFullscreen} style={{ padding: "6px 14px", borderRadius: 8, background: isFullscreen ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: isFullscreen ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><FullscreenIcon size={12} /> {isFullscreen ? "Exit" : "Full"}</button>
         </div>
 
         {showSettings && (
@@ -614,7 +649,7 @@ export default function MTGTracker() {
             <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>Format</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
               {FORMATS.map((f) => (
-                <button key={f.id} onClick={() => changeFormat(f)} style={{ padding: "6px 12px", borderRadius: 8, background: format.id === f.id ? theme.accent : "transparent", border: `1px solid ${format.id === f.id ? theme.accent : theme.border}`, color: format.id === f.id ? theme.bg : theme.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{f.name} ({f.life})</button>
+                <button key={f.id} onClick={() => changeFormat(f)} style={{ padding: "6px 12px", borderRadius: 8, background: format.id === f.id ? theme.accent : "transparent", border: `1px solid ${format.id === f.id ? theme.accent : theme.border}`, color: format.id === f.id ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>{f.name} ({f.life})</button>
               ))}
             </div>
             <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>Theme</div>
@@ -633,7 +668,7 @@ export default function MTGTracker() {
                 <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" }}>Dice Roll</div>
                 <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 8 }}>
                   {[4, 6, 8, 10, 12, 20].map((d) => (
-                    <button key={d} onClick={() => { haptic(); setDiceType(d); }} style={{ width: 30, height: 26, borderRadius: 4, background: diceType === d ? theme.accent : "transparent", border: `1px solid ${diceType === d ? theme.accent : theme.border}`, color: diceType === d ? theme.bg : theme.muted, fontSize: 10, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>d{d}</button>
+                    <button key={d} onClick={() => { haptic(); setDiceType(d); }} style={{ width: 30, height: 26, borderRadius: 4, background: diceType === d ? theme.accent : "transparent", border: `1px solid ${diceType === d ? theme.accent : theme.border}`, color: diceType === d ? theme.bg : theme.text, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>d{d}</button>
                   ))}
                 </div>
                 <button onClick={rollDice} disabled={rolling} style={{ padding: "10px 20px", borderRadius: 10, background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)`, border: "none", color: theme.bg, fontSize: 14, fontWeight: 700, cursor: rolling ? "wait" : "pointer", fontFamily: "'Cinzel', serif", boxShadow: `0 4px 16px ${theme.glow}` }}><DiceIcon size={16} /> Roll</button>
@@ -654,17 +689,17 @@ export default function MTGTracker() {
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Storm Count</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                  <button onClick={() => { haptic(); const next = Math.max(0, stormCount - 1); setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
+                  <button onClick={() => { haptic(); const next = Math.max(0, stormCount - 1); setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
                   <span style={{ fontSize: 28, fontWeight: 700, color: theme.accent, minWidth: 30 }}>{stormCount}</span>
-                  <button onClick={() => { haptic(); const next = stormCount + 1; setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                  <button onClick={() => { haptic(); const next = stormCount + 1; setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Turn</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                  <button onClick={() => { haptic(); setTurnCount(Math.max(1, turnCount - 1)); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
+                  <button onClick={() => { haptic(); setTurnCount(Math.max(1, turnCount - 1)); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
                   <span style={{ fontSize: 28, fontWeight: 700, color: theme.accent, minWidth: 30 }}>{turnCount}</span>
-                  <button onClick={() => { haptic(); setTurnCount(turnCount + 1); setStormCount(0); logAction(`Turn ${turnCount + 1}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                  <button onClick={() => { haptic(); setTurnCount(turnCount + 1); setStormCount(0); logAction(`Turn ${turnCount + 1}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                 </div>
               </div>
             </div>
@@ -832,9 +867,9 @@ export default function MTGTracker() {
 
         <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "center" }}>
           {players.length < Math.max(...format.players) && (
-            <button onClick={addPlayer} style={{ padding: "10px 20px", borderRadius: 10, background: "transparent", border: `1px dashed ${theme.border}`, color: theme.muted, fontSize: 12, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}>+ Add Player</button>
+            <button onClick={addPlayer} style={{ padding: "10px 20px", borderRadius: 10, background: "transparent", border: `1px dashed ${theme.border}`, color: theme.text, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}>+ Add Player</button>
           )}
-          <button onClick={resetGame} style={{ padding: "10px 20px", borderRadius: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171", fontSize: 12, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}>{"\u21BA"} New Game</button>
+          <button onClick={resetGame} style={{ padding: "10px 20px", borderRadius: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#F87171", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}>{"\u21BA"} New Game</button>
         </div>
       </div>
       <style>{`

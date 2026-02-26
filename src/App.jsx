@@ -180,7 +180,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
     haptic();
     const rect = lifeTapRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
-    if (e.clientX >= centerX) {
+    const isRightSide = e.clientX >= centerX;
+    const isIncrease = rotated ? !isRightSide : isRightSide;
+    
+    if (isIncrease) {
       onUpdate({ life: player.life + 1 });
     } else {
       onUpdate({ life: player.life - 1 });

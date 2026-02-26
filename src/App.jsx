@@ -161,9 +161,31 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
   const [editingName, setEditingName] = useState(false);
   const [showCommander, setShowCommander] = useState(false);
   const [showCounters, setShowCounters] = useState(false);
+  const [lifeFlash, setLifeFlash] = useState(null);
+  const prevLife = useRef(player.life);
+  const lifeTapRef = useRef(null);
   const manaColor = MANA_COLORS[player.color];
   const isDead = player.life <= 0 || player.poison >= 10;
-  const lifeButtons = [-5, -1, 1, 5];
+
+  useEffect(() => {
+    if (player.life !== prevLife.current) {
+      setLifeFlash(player.life > prevLife.current ? "gain" : "loss");
+      const timeout = setTimeout(() => setLifeFlash(null), 2500);
+      prevLife.current = player.life;
+      return () => clearTimeout(timeout);
+    }
+  }, [player.life]);
+
+  const handleLifeTap = (e) => {
+    haptic();
+    const rect = lifeTapRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    if (e.clientX >= centerX) {
+      onUpdate({ life: player.life + 1 });
+    } else {
+      onUpdate({ life: player.life - 1 });
+    }
+  };
 
   const handleButton = (fn) => (e) => { haptic(); fn(e); };
 
@@ -204,7 +226,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
               onKeyDown={(e) => { if (e.key === "Enter") { onUpdate({ name: e.target.value }); setEditingName(false); } }}
               style={{ background: "transparent", border: `1px solid ${theme.border}`, color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, padding: "2px 8px", borderRadius: 6, outline: "none", width: 120 }} />
           ) : (
-            <span onClick={() => setEditingName(true)} style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, cursor: "pointer", letterSpacing: "0.05em" }}>{player.name}</span>
+            <span onClick={() => setEditingName(true)} style={{ color: theme.text, fontFamily: "'Cinzel', serif", fontSize: 14, cursor: "pointer", letterSpacing: "0.05em", borderBottom: `1px dashed ${theme.muted}44`, paddingBottom: 1 }}>{player.name}</span>
           )}
           <div style={{ display: "flex", gap: 3 }}>
             {Object.entries(MANA_COLORS).map(([key, mc]) => (
@@ -220,21 +242,18 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
         </div>
       </div>
 
-      <div style={{ padding: "8px 16px 12px", textAlign: "center" }}>
+      <div ref={lifeTapRef} onClick={handleLifeTap} style={{
+        padding: "16px 16px 14px", textAlign: "center", cursor: "pointer", position: "relative",
+        userSelect: "none", WebkitTapHighlightColor: "transparent",
+        background: lifeFlash === "gain" ? "rgba(74,222,128,0.15)" : lifeFlash === "loss" ? "rgba(248,113,113,0.15)" : "transparent",
+        transition: "background 0.8s ease-out",
+      }}>
+        <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, pointerEvents: "none" }}>{"\u2212"}</span>
+        <span style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 28, fontWeight: 300, color: theme.muted, opacity: 0.25, pointerEvents: "none" }}>+</span>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
         <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>Life Total</div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
-          {lifeButtons.map((amt) => (
-            <button key={amt} onClick={handleButton(() => onUpdate({ life: player.life + amt }))} style={{
-              width: 44, height: 36, borderRadius: 8,
-              background: amt > 0 ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)",
-              border: `1px solid ${amt > 0 ? "rgba(74,222,128,0.2)" : "rgba(248,113,113,0.2)"}`,
-              color: amt > 0 ? "#4ADE80" : "#F87171", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'Cinzel', serif", transition: "all 0.15s",
-            }}>{amt > 0 ? `+${amt}` : amt}</button>
-          ))}
-        </div>
       </div>
 
       <div style={{ display: "flex", gap: 6, padding: "0 16px 8px", flexWrap: "wrap" }}>
@@ -257,16 +276,18 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
 
       <div style={{ display: "flex", borderTop: `1px solid ${theme.border}` }}>
         <button onClick={handleButton(() => setShowCounters(!showCounters))} style={{
-          flex: 1, padding: "10px 0", background: showCounters ? theme.glow : "transparent", border: "none",
-          color: theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
+          flex: 1, padding: "12px 0", background: showCounters ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
+          borderBottom: showCounters ? `2px solid ${theme.accent}` : "2px solid transparent",
+          color: showCounters ? theme.accent : theme.text, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
           fontFamily: "'Cinzel', serif", transition: "all 0.2s", borderRight: `1px solid ${theme.border}`,
         }}>Counters</button>
         {format.id === "commander" && (
           <button onClick={handleButton(() => setShowCommander(!showCommander))} style={{
-            flex: 1, padding: "10px 0", background: showCommander ? theme.glow : "transparent", border: "none",
-            color: theme.muted, fontSize: 11, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
+            flex: 1, padding: "12px 0", background: showCommander ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
+            borderBottom: showCommander ? `2px solid ${theme.accent}` : "2px solid transparent",
+            color: showCommander ? theme.accent : theme.text, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
             fontFamily: "'Cinzel', serif", transition: "all 0.2s",
-          }}><SwordsIcon size={12} /> Cmd Dmg</button>
+          }}><SwordsIcon size={14} /> Cmd Dmg</button>
         )}
       </div>
 

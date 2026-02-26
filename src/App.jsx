@@ -533,7 +533,21 @@ export default function MTGTracker() {
       <div style={{ position: "relative", zIndex: 1, padding: players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px" }}>
         <div style={{ textAlign: "center", paddingTop: players.length >= 3 ? 4 : 12, paddingBottom: players.length >= 3 ? 8 : 16 }}>
           <h1 style={{ fontSize: players.length >= 3 ? 16 : 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
-          <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.15em", marginTop: 4 }}>{format.name.toUpperCase()} {"\u00B7"} TURN {turnCount} {"\u00B7"} STORM {stormCount}</div>
+          <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.15em", marginTop: 4, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+            <span>{format.name.toUpperCase()}</span>
+            <span>{"\u00B7"}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 12 }}>
+              <span onClick={() => { haptic(); setTurnCount(Math.max(1, turnCount - 1)); }} style={{ cursor: "pointer", padding: "0 4px", fontSize: 14, color: "#F87171" }}>{"\u2212"}</span>
+              <span>TURN {turnCount}</span>
+              <span onClick={() => { haptic(); setTurnCount(turnCount + 1); setStormCount(0); logAction(`Turn ${turnCount + 1}`); }} style={{ cursor: "pointer", padding: "0 4px", fontSize: 14, color: "#4ADE80" }}>+</span>
+            </span>
+            <span>{"\u00B7"}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 12 }}>
+              <span onClick={() => { haptic(); setStormCount(Math.max(0, stormCount - 1)); }} style={{ cursor: "pointer", padding: "0 4px", fontSize: 14, color: "#F87171" }}>{"\u2212"}</span>
+              <span>STORM {stormCount}</span>
+              <span onClick={() => { haptic(); const next = stormCount + 1; setStormCount(next); logAction(`Storm: ${stormCount} \u2192 ${next}`); }} style={{ cursor: "pointer", padding: "0 4px", fontSize: 14, color: "#4ADE80" }}>+</span>
+            </span>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 6, marginBottom: players.length >= 3 ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>

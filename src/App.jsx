@@ -237,10 +237,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={handleButton(onToggleMinimize)} style={{ background: "none", border: "none", color: theme.muted, cursor: "pointer", fontSize: 16, padding: 2 }}>−</button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: theme.muted, cursor: "pointer", fontSize: 16, fontWeight: 700, padding: "4px 10px", lineHeight: 1 }}>−</button>
           {players.length > 2 && (
-            <button onClick={handleButton(onRemove)} style={{ background: "rgba(127,29,29,0.15)", border: "1px solid rgba(127,29,29,0.3)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: 11, fontWeight: 700, padding: "2px 6px", lineHeight: 1 }}>✕</button>
+            <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 8, color: "#F87171", cursor: "pointer", fontSize: 16, fontWeight: 700, padding: "4px 10px", lineHeight: 1 }}>✕</button>
           )}
         </div>
       </div>

@@ -281,7 +281,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       background: `linear-gradient(145deg, ${theme.card} 0%, ${manaColor.dark} 100%)`,
       border: `1px solid ${isDead ? "#7F1D1D" : theme.border}`,
       borderRadius: 16, padding: 0, position: "relative", overflow: "hidden",
-      opacity: isDead ? 0.6 : 1, transition: "all 0.4s ease",
+      transition: "all 0.4s ease",
       boxShadow: isDead ? "inset 0 0 40px rgba(127,29,29,0.3)" : `0 4px 24px ${theme.glow}`,
       flex: 1, display: "flex", flexDirection: "column",
     }}>
@@ -412,7 +412,14 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       )}
 
       {isDead && (
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, opacity: 0.3, pointerEvents: "none" }}>{"\u{1F480}"}</div>
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.7)", zIndex: 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          pointerEvents: "none", borderRadius: 16,
+        }}>
+          <span style={{ fontSize: 140, lineHeight: 1, color: "#EF4444", filter: "drop-shadow(0 0 30px rgba(239,68,68,0.6))" }}>{"\u{1F480}"}</span>
+        </div>
       )}
     </div>
   );

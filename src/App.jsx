@@ -17,7 +17,7 @@ const THEMES = [
 ];
 
 const DEFAULT_PLAYERS = [
-  { id: 1, name: "Player 1", life: 40, poison: 0, energy: 0, experience: 0, commanderDamage: {}, color: "W", rotation: 0 },
+  { id: 1, name: "Player 1", life: 40, poison: 0, energy: 0, experience: 0, commanderDamage: {}, color: "W", rotation: 180 },
   { id: 2, name: "Player 2", life: 40, poison: 0, energy: 0, experience: 0, commanderDamage: {}, color: "U", rotation: 0 },
 ];
 
@@ -331,7 +331,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             {pendingDelta > 0 ? `+${pendingDelta}` : pendingDelta}
           </div>
         )}
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: players.length === 2 ? 80 : 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
         <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>Life Total</div>
@@ -574,6 +574,9 @@ export default function MTGTracker() {
       let updated = prev.map((p) => ({ ...p, life: f.life, poison: 0, energy: 0, experience: 0, commanderDamage: {} }));
       const maxPlayers = Math.max(...f.players);
       if (updated.length > maxPlayers) updated = updated.slice(0, maxPlayers);
+      if (updated.length === 2) {
+        updated = updated.map((p, i) => ({ ...p, rotation: i === 0 ? 180 : 0 }));
+      }
       return updated;
     });
     setStormCount(0); setTurnCount(1); setGameLog([]);
@@ -704,7 +707,7 @@ export default function MTGTracker() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: players.length === 2 ? "1fr" : "repeat(2, 1fr)",
           gridAutoRows: "1fr",
           gap: 12,
           minHeight: "calc(100vh - 200px)",

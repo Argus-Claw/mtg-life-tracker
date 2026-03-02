@@ -479,6 +479,8 @@ export default function MTGTracker() {
   const [flipping, setFlipping] = useState(false);
   const [gameHistory, setGameHistory] = useState(saved?.gameHistory || []);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [firstPlayer, setFirstPlayer] = useState(null);
+  const [pickingFirst, setPickingFirst] = useState(false);
 
   useWakeLock();
 
@@ -565,6 +567,17 @@ export default function MTGTracker() {
       count++;
       if (count > 8) { clearInterval(interval); const finalResult = Math.random() > 0.5 ? "Heads" : "Tails"; setCoinResult(finalResult); setFlipping(false); logAction(`Coin flip: ${finalResult}`); }
     }, 100);
+  };
+
+  const pickFirstPlayer = () => {
+    haptic();
+    setPickingFirst(true);
+    let count = 0;
+    const interval = setInterval(() => {
+      setFirstPlayer(players[Math.floor(Math.random() * players.length)].name);
+      count++;
+      if (count > 12) { clearInterval(interval); const winner = players[Math.floor(Math.random() * players.length)].name; setFirstPlayer(winner); setPickingFirst(false); logAction(`Goes first: ${winner}`); }
+    }, 90);
   };
 
   const changeFormat = (f) => {
@@ -670,6 +683,13 @@ export default function MTGTracker() {
                   <button onClick={() => { haptic(); setTurnCount(turnCount + 1); setStormCount(0); logAction(`Turn ${turnCount + 1}`); }} style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ADE80", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                 </div>
               </div>
+            </div>
+            <div style={{ marginTop: 16, borderTop: `1px solid ${theme.border}`, paddingTop: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" }}>Who Goes First?</div>
+              <button onClick={pickFirstPlayer} disabled={pickingFirst} style={{ padding: "10px 20px", borderRadius: 10, background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)`, border: "none", color: theme.bg, fontSize: 14, fontWeight: 700, cursor: pickingFirst ? "wait" : "pointer", fontFamily: "'Cinzel', serif", boxShadow: `0 4px 16px ${theme.glow}` }}>&#x1F3B2; Randomize</button>
+              {firstPlayer && (
+                <div style={{ marginTop: 12, fontSize: 24, fontWeight: 800, color: theme.accent, textShadow: `0 0 20px ${theme.glow}`, animation: pickingFirst ? "pulse 0.15s ease infinite" : "none" }}>{pickingFirst ? firstPlayer : `${firstPlayer} goes first!`}</div>
+              )}
             </div>
           </div>
         )}

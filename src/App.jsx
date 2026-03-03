@@ -195,7 +195,7 @@ function AnimatedNumber({ value, theme }) {
 }
 
 
-function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMinimized, onToggleMinimize, onRotate }) {
+function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMinimized, onToggleMinimize, onRotate, isDesktop }) {
   const [editingName, setEditingName] = useState(false);
   const [showCommander, setShowCommander] = useState(false);
   const [showCounters, setShowCounters] = useState(false);
@@ -280,13 +280,13 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
     <div style={{
       background: `linear-gradient(145deg, ${theme.card} 0%, ${manaColor.dark} 100%)`,
       border: `1px solid ${isDead ? "#7F1D1D" : theme.border}`,
-      borderRadius: 16, padding: 0, position: "relative", overflow: "hidden",
+      borderRadius: isDesktop ? 10 : 16, padding: 0, position: "relative", overflow: "hidden",
       transition: "all 0.4s ease",
       boxShadow: isDead ? "inset 0 0 40px rgba(127,29,29,0.3)" : `0 4px 24px ${theme.glow}`,
       flex: 1, display: "flex", flexDirection: "column",
     }}>
       <div style={{ height: 3, background: `linear-gradient(90deg, ${manaColor.color}, ${manaColor.accent}, transparent)` }} />
-      <div style={{ padding: players.length >= 3 ? "8px 8px 0" : "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
+      <div style={{ padding: isDesktop ? "4px 8px 0" : (players.length >= 3 ? "8px 8px 0" : "12px 16px 0"), display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
         <div style={{ display: "flex", alignItems: "center", gap: players.length >= 3 ? 4 : 8, overflow: "hidden", flex: 1, minWidth: 0 }}>
           {editingName ? (
             <input autoFocus defaultValue={player.name}
@@ -312,7 +312,7 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
       </div>
 
       <div ref={lifeTapRef} onClick={handleLifeTap} style={{
-        padding: "16px 16px 14px", textAlign: "center", cursor: "pointer", position: "relative",
+        padding: isDesktop ? "8px 10px 6px" : "16px 16px 14px", textAlign: "center", cursor: "pointer", position: "relative",
         userSelect: "none", WebkitTapHighlightColor: "transparent", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
         background: lifeFlash === "gain" ? "rgba(74,222,128,0.15)" : lifeFlash === "loss" ? "rgba(248,113,113,0.15)" : "transparent",
         transition: "background 0.8s ease-out",
@@ -331,13 +331,13 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             {pendingDelta > 0 ? `+${pendingDelta}` : pendingDelta}
           </div>
         )}
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 80, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: isDesktop ? 72 : 80, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
         <div style={{ fontSize: 12, color: theme.muted, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>Life Total</div>
       </div>
 
-      <div style={{ display: "flex", gap: 6, padding: "0 16px 8px", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: isDesktop ? 4 : 6, padding: isDesktop ? "0 8px 4px" : "0 16px 8px", flexWrap: "wrap" }}>
         {player.poison > 0 && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(132,204,22,0.12)", border: "1px solid rgba(132,204,22,0.25)", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#84CC16" }}>
             <SkullIcon size={12} /> {player.poison}
@@ -357,14 +357,14 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
 
       <div style={{ display: "flex", borderTop: `1px solid ${theme.border}` }}>
         <button onClick={handleButton(() => setShowCounters(!showCounters))} style={{
-          flex: 1, padding: "12px 0", background: showCounters ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
+          flex: 1, padding: isDesktop ? "8px 0" : "12px 0", background: showCounters ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
           borderBottom: showCounters ? `2px solid ${theme.accent}` : "2px solid transparent",
           color: showCounters ? theme.accent : theme.text, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
           fontFamily: "'Cinzel', serif", transition: "all 0.2s", borderRight: `1px solid ${theme.border}`,
         }}>Counters</button>
         {format.id === "commander" && (
           <button onClick={handleButton(() => setShowCommander(!showCommander))} style={{
-            flex: 1, padding: "12px 0", background: showCommander ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
+            flex: 1, padding: isDesktop ? "8px 0" : "12px 0", background: showCommander ? theme.glow : `rgba(255,255,255,0.03)`, border: "none",
             borderBottom: showCommander ? `2px solid ${theme.accent}` : "2px solid transparent",
             color: showCommander ? theme.accent : theme.text, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
             fontFamily: "'Cinzel', serif", transition: "all 0.2s",
@@ -481,6 +481,16 @@ export default function MTGTracker() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [firstPlayer, setFirstPlayer] = useState(null);
   const [pickingFirst, setPickingFirst] = useState(false);
+  const [layoutMode, setLayoutMode] = useState(() => localStorage.getItem('mtg-layout-mode') || 'mobile');
+
+  const toggleLayoutMode = () => {
+    const newMode = layoutMode === 'mobile' ? 'desktop' : 'mobile';
+    setLayoutMode(newMode);
+    localStorage.setItem('mtg-layout-mode', newMode);
+    haptic();
+  };
+
+  const isDesktop = layoutMode === 'desktop';
 
   useWakeLock();
 
@@ -596,10 +606,10 @@ export default function MTGTracker() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: players.length >= 3 ? "100%" : 600, margin: "0 auto", position: "relative", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
+    <div data-layout={layoutMode} style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Cinzel', serif", color: theme.text, maxWidth: isDesktop ? "100%" : (players.length >= 3 ? "100%" : 600), margin: "0 auto", position: "relative", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 300, background: `radial-gradient(ellipse at 50% 0%, ${theme.glow}, transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "relative", zIndex: 1, padding: players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px" }}>
-        <div style={{ textAlign: "center", paddingTop: players.length >= 3 ? 4 : 12, paddingBottom: players.length >= 3 ? 8 : 16 }}>
+      <div style={{ position: "relative", zIndex: 1, padding: isDesktop ? "4px 6px 40px" : (players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px") }}>
+        <div style={{ textAlign: "center", paddingTop: isDesktop ? 2 : (players.length >= 3 ? 4 : 12), paddingBottom: isDesktop ? 4 : (players.length >= 3 ? 8 : 16) }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
           <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.15em", marginTop: 4, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span>{format.name.toUpperCase()}</span>
@@ -618,11 +628,12 @@ export default function MTGTracker() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: players.length >= 3 ? 8 : 16, flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: isDesktop ? 4 : 6, marginBottom: isDesktop ? 4 : (players.length >= 3 ? 8 : 16), flexWrap: "wrap", justifyContent: "center" }}>
           <button onClick={() => { haptic(); setShowSettings(!showSettings); }} style={{ padding: "6px 14px", borderRadius: 8, background: showSettings ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showSettings ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\u2699"} Settings</button>
           <button onClick={() => { haptic(); setShowTools(!showTools); }} style={{ padding: "6px 14px", borderRadius: 8, background: showTools ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showTools ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{"\uD83C\uDFB2"} Tools</button>
           <button onClick={() => { haptic(); setShowHistory(!showHistory); }} style={{ padding: "6px 14px", borderRadius: 8, background: showHistory ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: showHistory ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><HistoryIcon size={12} /> Log</button>
           <button onClick={toggleFullscreen} style={{ padding: "6px 14px", borderRadius: 8, background: isFullscreen ? theme.accent : "transparent", border: `1px solid ${theme.border}`, color: isFullscreen ? theme.bg : theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}><FullscreenIcon size={12} /> {isFullscreen ? "Exit" : "Full"}</button>
+          <button onClick={toggleLayoutMode} style={{ padding: "6px 14px", borderRadius: 8, background: "transparent", border: `1px solid ${theme.border}`, color: theme.text, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", fontFamily: "'Cinzel', serif" }}>{isDesktop ? "\uD83D\uDDA5\uFE0F" : "\uD83D\uDCF1"} {isDesktop ? "Desktop" : "Mobile"}</button>
         </div>
 
         {showSettings && (
@@ -727,10 +738,10 @@ export default function MTGTracker() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: players.length === 2 ? "1fr" : "repeat(2, 1fr)",
+          gridTemplateColumns: isDesktop ? (players.length === 2 ? "1fr 1fr" : "repeat(2, 1fr)") : (players.length === 2 ? "1fr" : "repeat(2, 1fr)"),
           gridAutoRows: "1fr",
-          gap: 12,
-          minHeight: "calc(100vh - 200px)",
+          gap: isDesktop ? 6 : 12,
+          minHeight: isDesktop ? "calc(100vh - 120px)" : "calc(100vh - 200px)",
         }}>
           {players.map((player, index) => {
             const rotation = player.rotation || 0;
@@ -745,6 +756,7 @@ export default function MTGTracker() {
                 isMinimized={!!minimized[player.id]}
                 onToggleMinimize={() => setMinimized((prev) => ({ ...prev, [player.id]: !prev[player.id] }))}
                 onRotate={() => rotatePlayer(player.id)}
+                isDesktop={isDesktop}
               />
             );
 
@@ -773,7 +785,7 @@ export default function MTGTracker() {
           })}
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: isDesktop ? 8 : 16, justifyContent: "center" }}>
           {players.length < Math.max(...format.players) && (
             <button onClick={addPlayer} style={{ padding: "10px 20px", borderRadius: 10, background: "transparent", border: `1px dashed ${theme.border}`, color: theme.text, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}>+ Add Player</button>
           )}

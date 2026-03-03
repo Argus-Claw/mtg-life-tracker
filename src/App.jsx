@@ -303,10 +303,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
           </div>
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-          <button onClick={handleButton(onRotate)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.text, cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>↻</button>
-          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.text, cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>−</button>
+          <button onClick={handleButton(onRotate)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.text, cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 10px", lineHeight: 1, minWidth: 28, textAlign: "center" }}>↻</button>
+          <button onClick={handleButton(onToggleMinimize)} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: theme.text, cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 10px", lineHeight: 1, minWidth: 28, textAlign: "center" }}>−</button>
           {players.length > 2 && (
-            <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: players.length >= 3 ? 12 : 14, fontWeight: 700, padding: players.length >= 3 ? "3px 7px" : "4px 10px", lineHeight: 1, minWidth: players.length >= 3 ? 24 : 30, textAlign: "center" }}>✕</button>
+            <button onClick={handleButton(onRemove)} style={{ background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 6, color: "#F87171", cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 10px", lineHeight: 1, minWidth: 28, textAlign: "center" }}>✕</button>
           )}
         </div>
       </div>
@@ -331,10 +331,10 @@ function PlayerCard({ player, players, theme, format, onUpdate, onRemove, isMini
             {pendingDelta > 0 ? `+${pendingDelta}` : pendingDelta}
           </div>
         )}
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: players.length === 2 ? 80 : 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 80, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>
           <AnimatedNumber value={player.life} theme={theme} />
         </div>
-        <div style={{ fontSize: 10, color: theme.muted, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>Life Total</div>
+        <div style={{ fontSize: 12, color: theme.muted, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>Life Total</div>
       </div>
 
       <div style={{ display: "flex", gap: 6, padding: "0 16px 8px", flexWrap: "wrap" }}>
@@ -600,7 +600,7 @@ export default function MTGTracker() {
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 300, background: `radial-gradient(ellipse at 50% 0%, ${theme.glow}, transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "relative", zIndex: 1, padding: players.length >= 3 ? "8px 8px 60px" : "16px 16px 100px" }}>
         <div style={{ textAlign: "center", paddingTop: players.length >= 3 ? 4 : 12, paddingBottom: players.length >= 3 ? 8 : 16 }}>
-          <h1 style={{ fontSize: players.length >= 3 ? 16 : 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.12em", color: theme.accent, margin: 0, textTransform: "uppercase", textShadow: `0 0 30px ${theme.glow}` }}>{"\u27E1"} Life Tracker {"\u27E1"}</h1>
           <div style={{ fontSize: 11, color: theme.muted, letterSpacing: "0.15em", marginTop: 4, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span>{format.name.toUpperCase()}</span>
             <span>{"\u00B7"}</span>

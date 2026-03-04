@@ -1,9 +1,9 @@
-const CACHE_NAME = 'mtg-tracker-v1';
+const CACHE_NAME = 'mtg-tracker-v2';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.svg',
+  '/mtg/',
+  '/mtg/index.html',
+  '/mtg/manifest.json',
+  '/mtg/icon.svg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,6 +24,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // Only handle requests within our scope
+  const url = new URL(event.request.url);
+  if (!url.pathname.startsWith('/mtg/')) return;
   event.respondWith(
     fetch(event.request)
       .then((response) => {
